@@ -1,8 +1,7 @@
-import { PrismaClient } from '@prisma/client'
 import dayjs from 'dayjs'
 import { NextRequest, NextResponse } from 'next/server'
 
-const prisma = new PrismaClient()
+import { prisma } from '@/lib/prisma'
 
 export async function POST() {
   const lockCode = await prisma.lockCode.create({
