@@ -1,5 +1,5 @@
-import * as React from 'react'
 import { Inter } from 'next/font/google'
+import * as React from 'react'
 
 import './globals.css'
 
@@ -18,7 +18,9 @@ export default function RootLayout({
 }) {
   return (
     <html lang="pt-br">
-      <body className={inter.className}>{children}</body>
+      <body className={inter.className}>
+        <main className="p-4">{children}</main>
+      </body>
     </html>
   )
 }
