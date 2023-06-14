@@ -1,4 +1,4 @@
-import dayjs from 'dayjs'
+import { addHours } from 'date-fns'
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/prisma'
@@ -7,17 +7,11 @@ export async function POST() {
   const lockCode = await prisma.lockCode.create({
     data: {
       code: new Date().toISOString(),
-      expiresIn: dayjs().add(1, 'h').toDate(),
+      expiresIn: addHours(new Date(), 1),
     },
   })
 
   return NextResponse.json(lockCode)
-}
-
-export async function GET() {
-  const lockCodes = await prisma.lockCode.findMany()
-
-  return NextResponse.json(lockCodes)
 }
 
 export async function PATCH(request: NextRequest) {
@@ -25,26 +19,21 @@ export async function PATCH(request: NextRequest) {
   const code = searchParams.get('code')
 
   if (!code) {
-    return NextResponse.json(
-      { error: 'The code was not provided.' },
-      { status: 400 },
-    )
+    return new NextResponse('The code was not provided.', { status: 400 })
   }
 
   const lockCode = await prisma.lockCode.findUnique({ where: { code } })
 
   if (!lockCode) {
-    return NextResponse.json(
-      { error: 'The provided code does not exist.' },
-      { status: 404 },
-    )
+    return new NextResponse('The provided code does not exist.', {
+      status: 404,
+    })
   }
 
   if (lockCode.isRead) {
-    return NextResponse.json(
-      { error: 'The provided code has already been read.' },
-      { status: 409 },
-    )
+    return new NextResponse('The provided code has already been read.', {
+      status: 409,
+    })
   }
 
   await prisma.lockCode.update({
@@ -52,10 +41,7 @@ export async function PATCH(request: NextRequest) {
     data: { isRead: true },
   })
 
-  return NextResponse.json(
-    { message: 'Lock code successfully marked as read.' },
-    { status: 200 },
-  )
+  return new NextResponse(null, { status: 200 })
 }
 
 export async function DELETE(request: NextRequest) {
@@ -63,22 +49,18 @@ export async function DELETE(request: NextRequest) {
   const code = searchParams.get('code')
 
   if (!code) {
-    return NextResponse.json(
-      { error: 'The code was not provided.' },
-      { status: 400 },
-    )
+    return new NextResponse('The code was not provided.', { status: 400 })
   }
 
   const lockCode = await prisma.lockCode.findUnique({ where: { code } })
 
   if (!lockCode) {
-    return NextResponse.json(
-      { error: 'The provided code does not exist.' },
-      { status: 404 },
-    )
+    return new NextResponse('The provided code does not exist.', {
+      status: 404,
+    })
   }
 
   await prisma.lockCode.delete({ where: { code } })
 
-  return NextResponse.json({}, { status: 200 })
+  return new NextResponse(null, { status: 200 })
 }

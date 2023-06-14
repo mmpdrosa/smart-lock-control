@@ -1,88 +1,26 @@
-'use client'
+import { DataTable } from '@/components/data-table'
+import { prisma } from '@/lib/prisma'
+import { LockCode, columns } from './columns'
+import { NewCodeButton } from '@/components/new-code-button'
 
-import * as React from 'react'
-import Image from 'next/image'
-import QRCode from 'qrcode'
+async function getLockCodes(): Promise<LockCode[]> {
+  const lockCodes = await prisma.lockCode.findMany({
+    select: { id: true, code: true, isRead: true, expiresIn: true },
+  })
 
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table'
-import { Button } from '@/components/ui/button'
-
-interface LockCode {
-  id: string
-  code: string
-  isRead: boolean
-  createdAt: string
-  expiresIn: string
+  return lockCodes
 }
 
-export default function Home() {
-  const [imageUrl, setImageUrl] = React.useState('')
-  const [lockCodes, setLockCodes] = React.useState<LockCode[]>([])
-
-  const handleCreateLockCode = async () => {
-    const response = await fetch('/api/lock/keys', {
-      method: 'POST',
-    })
-
-    const lockCode = await response.json()
-
-    const qrCodeUrl = await QRCode.toDataURL(lockCode.code, {
-      width: 400,
-    })
-
-    setImageUrl(qrCodeUrl)
-  }
-
-  React.useEffect(() => {
-    const fetchCodes = async () => {
-      const response = await fetch('/api/lock/keys', {
-        method: 'GET',
-      })
-
-      const lockCodes: LockCode[] = await response.json()
-
-      setLockCodes(lockCodes)
-    }
-
-    fetchCodes()
-  }, [imageUrl])
+export default async function Home() {
+  const lockCodes = await getLockCodes()
 
   return (
-    <div className="space-y-4">
-      <div className="flex flex-col items-center justify-center">
-        <div className="relative h-96 w-96 self-center">
-          {imageUrl && <Image src={imageUrl} fill alt="" />}
-        </div>
-        <Button onClick={handleCreateLockCode}>Gerar Código</Button>
+    <div className="container mx-auto space-y-10 py-10">
+      <div className="flex justify-center">
+        <NewCodeButton />
       </div>
 
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead>Código</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Vencimento</TableHead>
-            <TableHead>Criação</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {lockCodes.map((lockCode) => (
-            <TableRow key={lockCode.id}>
-              <TableCell>{lockCode.code}</TableCell>
-              <TableCell>{String(lockCode.isRead)}</TableCell>
-              <TableCell>{lockCode.expiresIn}</TableCell>
-              <TableCell>{lockCode.createdAt}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
+      <DataTable columns={columns} data={lockCodes} />
     </div>
   )
 }
