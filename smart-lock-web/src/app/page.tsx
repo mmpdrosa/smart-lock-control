@@ -3,15 +3,15 @@ import { prisma } from '@/lib/prisma'
 import { LockCode, columns } from './columns'
 import { NewCodeButton } from '@/components/new-code-button'
 
+async function getLockCodes(): Promise<LockCode[]> {
+  const lockCodes = await prisma.lockCode.findMany({
+    select: { id: true, code: true, isRead: true, expiresIn: true },
+  })
+
+  return lockCodes
+}
+
 export default async function Home() {
-  async function getLockCodes(): Promise<LockCode[]> {
-    const lockCodes = await prisma.lockCode.findMany({
-      select: { id: true, code: true, isRead: true, expiresIn: true },
-    })
-
-    return lockCodes
-  }
-
   const lockCodes = await getLockCodes()
 
   return (
@@ -24,3 +24,5 @@ export default async function Home() {
     </div>
   )
 }
+
+export const revalidate = 0
